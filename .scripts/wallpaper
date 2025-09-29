@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+import click
+import subprocess
+import os
+import random
+
+@click.group()
+def cli():
+    pass
+
+# Set command
+@cli.command("set")
+@click.argument("wallpaper", nargs=1)
+@click.option("-f", "--file", type=click.Path(exists=True), help="Add file to list before applying",)
+@click.option("-d", "--directory", type=click.Path(exists=True), help="Wallpaper list directory", default=os.path.expanduser("~/.config/wallpapers"))
+def setWallpaper(wallpaper, file, directory):
+    _setWallpaper(wallpaper, file, directory)
+
+def _setWallpaper(wallpaper, file, directory):
+    "Set current wallpaper to WALLPAPER"
+
+    if(file):
+        _addWallpaper(file, wallpaper, directory)
+
+    if(not os.path.exists(f"{directory}/{wallpaper}.png")):
+        print("Wallpaper not found!")
+        exit(2)
+    subprocess.run(f"ln -sfn {directory}/{wallpaper}.png /home/paper/.config/wallpaper".split())
+    subprocess.run("swww img --transition-type grow --transition-pos bottom-right {}/.config/wallpaper".format(os.path.expanduser("~")).split())
+
+# Add command
+@cli.command("add")
+@click.argument("src", nargs=1, type=click.Path(exists=True))
+@click.argument("name", nargs=1, required=False)
+@click.option("-d", "--directory", type=click.Path(exists=True), help="Wallpaper list directory", default=os.path.expanduser("~/.config/wallpapers"))
+def addWallpaper(src, name, directory):
+    _addWallpaper(src, name, directory)
+
+
+def _addWallpaper(src, name, directory):
+    "Adding a wallpaper SRC to the list with the name NAME"
+
+    out = os.path.splitext(os.path.basename(src))[0]
+    if(name):
+        out = name
+    subprocess.run(f"magick {src} {directory}/{out}.png".split())
+
+# List command
+@cli.command("list")
+@click.option("-d", "--directory", type=click.Path(exists=True), help="Wallpaper list directory", default=os.path.expanduser("~/.config/wallpapers"))
+def listWallpaper(directory):
+    wallpapers = _listWallpaper(directory)
+    print("\n".join(wallpapers))
+
+def _listWallpaper(directory):
+    files = os.listdir(directory)
+    return [os.path.splitext(f)[0] for f in files]
+
+# Random command
+@cli.command("rand")
+@click.option("-d", "--directory", type=click.Path(exists=True), help="Wallpaper list directory", default=os.path.expanduser("~/.config/wallpapers"))
+def randomWallpaper(directory):
+    wallpapers = _listWallpaper(directory)
+    _setWallpaper(random.choice(wallpapers), None, directory)
+
+# Remove command
+@cli.command("rm")
+@click.argument("wallpaper", nargs=1)
+@click.option("-d", "--directory", type=click.Path(exists=True), help="Wallpaper list directory", default=os.path.expanduser("~/.config/wallpapers"))
+def removeWallpaper(wallpaper, directory):
+    if(not os.path.exists(f"{directory}/{wallpaper}.png")):
+        print("Wallpaper not found!")
+        exit(2)
+    os.remove(f"{directory}/{wallpaper}.png")
+
+if __name__ == "__main__":
+    cli();

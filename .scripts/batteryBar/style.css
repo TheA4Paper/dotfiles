@@ -1,0 +1,23 @@
+window {
+  background-color: transparent;
+  min-height: 1px;
+}
+
+.battbar trough {
+  min-height: 1px;
+  background-color: transparent;
+}
+.battbar trough .filled {
+  min-height: 1px;
+  background-color: blue;
+  border: none;
+  border-color: transparent;
+  transition: background-color 1s;
+}
+
+.battbar trough .empty {
+  min-height: 1px;
+  border: none;
+  border-color: transparent;
+  background-color: transparent;
+}
